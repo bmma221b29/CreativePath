@@ -15,8 +15,8 @@
 }
 
 .logo {
-  width: 54px;
-  height: 54px;
+  width: clamp(36px, 5vw, 54px);
+  height: clamp(36px, 5vw, 54px);
 
   object-fit: cover;
 }
@@ -179,4 +179,5 @@ body {
 
 
 	
+
 
