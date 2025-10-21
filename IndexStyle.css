@@ -11,7 +11,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 26px clamp(20px, 2.6vw, 50px);
+  padding: 26px 50px;;
 }
 
 .logo {
@@ -179,6 +179,7 @@ body {
 
 
 	
+
 
 
 
