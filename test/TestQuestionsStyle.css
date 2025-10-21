@@ -26,19 +26,19 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 26px 50px;
+      padding: 26px clamp(20px, 2.6vw, 50px);
     }
 
     .logo {
-      width: 54px;
-      height: 54px;
+  width: clamp(36px, 5vw, 54px);
+  height: clamp(36px, 5vw, 54px);
       object-fit: cover;
     }
 
     .nav-right a {
       color: #ffffff;
       text-decoration: none;
-      font-size: 24px;
+      font-size: clamp(1rem, 1.5vw + 0.5rem, 1.5rem);
       font-weight: 600;
       margin-left: 30px;
       transition: opacity 0.2s;
@@ -320,4 +320,5 @@
 
     .question-list li:not(.locked) a:hover {
       transform: translateX(4px);
+
     }
