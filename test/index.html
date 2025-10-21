@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Career Guidance System</title>
+  <link rel="icon" type="png" href="../assets/images/logo1.png">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <link rel="stylesheet" href="TestQuestionsStyle.css">
+</head>
+
+<body>
+  <header class="navbar">
+    <div class="nav-left">
+      <a href="../"><img src="../assets/images/logo1.png" alt="Logo" class="logo"></a>
+    </div>
+    <nav class="nav-right">
+      <a href="#">Test</a>
+      <a href="../about-us/">About</a>
+      <a href="../careers/">Careers</a>
+    </nav>
+  </header>
+
+  <div class="question-page" id="question-page">
+    <aside class="sidebar">
+      <div class="category" id="question-category">
+        <div class="category-header"><span class="indicator">●</span> CategoryName</div>
+        <ul class="question-list" id="question-list"></ul>
+      </div>
+    </aside>
+
+    <main class="question-content">
+      <h1 id="question-text">Loading questions...</h1>
+      <div class="answer-buttons">
+        <button class="answer-btn" data-answer="yes">Yes</button>
+        <button class="answer-btn" data-answer="maybe">Maybe</button>
+        <button class="answer-btn" data-answer="no">No</button>
+      </div>
+    </main>
+  </div>
+
+  <div id="finished-overlay">
+    <div class="modal-content">
+      <button id="check-results-btn">Check Results</button>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>Your Creative Path, Made Clear.</p>
+    <a href="../feedback/" class="footer-link">Feedback</a>
+  </footer>
+
+  <script>
+    const API_BASE = "https://api.whatsmymmcareer.com/api";
+    const QUESTIONS_ENDPOINT = `${API_BASE}/questions?itemsPerPage=100`;
+
+    let questions = [];
+    let questionOrder = [];
+    let currentQuestionIndex = 0;
+    const answers = {};
+
+    // === Load Questions ===
+    function loadQuestions() {
+      $.getJSON(QUESTIONS_ENDPOINT)
+        .done((data) => {
+          questions = data || [];
+          if (!questions.length) throw new Error("No questions found.");
+          questions.sort((a, b) => (a.category || "").localeCompare(b.category || ""));
+          buildSidebar(questions);
+          showQuestion(0);
+          setTimeout(scrollActiveIntoView, 0);
+        })
+        .fail(() => $("#question-text").text("Failed to load questions."));
+    }
+
+    // === Build Sidebar ===
+    function buildSidebar(questions) {
+      const $sidebar = $(".sidebar").empty();
+      const grouped = questions.reduce((acc, q) => {
+        const cat = q.category || "Uncategorized";
+        if (!acc[cat]) acc[cat] = [];
+        acc[cat].push(q);
+        return acc;
+      }, {});
+
+      questionOrder = [];
+
+      $.each(grouped, (category, items) => {
+        const $categoryDiv = $('<div class="category"></div>');
+        const $header = $(`<div class="category-header"><span class="indicator">●</span> ${category}</div>`);
+        const $ul = $('<ul class="question-list"></ul>');
+
+        $.each(items, (i, q) => {
+          const $li = $("<li></li>");
+          const $a = $(`<a href="javascript:void(0);">Question ${i + 1}</a>`);
+          $a.on("click", () => {
+            const index = questionOrder.findIndex((qq) => qq.id === q.id);
+            const iri = `/api/questions/${q.id}`;
+            const isAnswered = answers[iri] !== undefined;
+            const maxAnsweredIndex = questionOrder.findLastIndex(q => answers[`/api/questions/${q.id}`] !== undefined);
+            const canAccess = isAnswered || index === currentQuestionIndex || index === maxAnsweredIndex + 1;
+            if (canAccess) showQuestion(index);
+          });
+          $li.append($a);
+          $ul.append($li);
+          questionOrder.push({ ...q, globalIndex: questionOrder.length, localIndex: i, category });
+        });
+        $categoryDiv.append($header).append($ul);
+        $sidebar.append($categoryDiv);
+      });
+    }
+
+    // === Update Sidebar ===
+    function updateSidebar() {
+      const maxAnsweredIndex = questionOrder.findLastIndex(
+        q => answers[`/api/questions/${q.id}`] !== undefined
+      );
+
+      $(".question-list li").each(function (idx) {
+        const q = questionOrder[idx];
+        const iri = `/api/questions/${q.id}`;
+        const answered = answers[iri] !== undefined;
+
+        $(this).removeClass("active completed locked next");
+
+        // 🟩 Default: answered questions = completed (green)
+        if (answered) $(this).addClass("completed");
+
+        // 🟦 Blue: next unanswered question (the first available)
+        if (!answered && idx === maxAnsweredIndex + 1) {
+          $(this).addClass("next");
+        }
+
+        // ⚫ Grey: locked future questions
+        if (idx > maxAnsweredIndex + 1) {
+          $(this).addClass("locked");
+        }
+
+        // 🟨 Yellow: currently viewing (always overrides everything)
+        if (idx === currentQuestionIndex) {
+          $(this)
+            .removeClass("completed locked next")
+            .addClass("active");
+        }
+      });
+      scrollActiveIntoView();
+    }
+
+    // === Show Question ===
+    function showQuestion(index) {
+      if (!questionOrder.length) return;
+      currentQuestionIndex = index;
+      const q = questionOrder[index];
+      $("#question-text").text(q.message);
+      updateSidebar();
+      scrollActiveIntoView();
+      highlightSelectedAnswer(`/api/questions/${q.id}`);
+
+      if (Object.keys(answers).length === questionOrder.length) {
+        $("#question-page").addClass("blurred");
+        $("#finished-overlay").addClass("active");
+      }
+    }
+
+    // === Highlight Selected Answer ===
+    function highlightSelectedAnswer(questionId) {
+      const selected = answers[questionId];
+      $(".answer-btn").each(function () {
+        $(this).toggleClass("selected", $(this).data("answer") === selected);
+      });
+    }
+
+    function scrollActiveIntoView() {
+      const $container = $(".sidebar");
+      const $active = $(".question-list li.active");
+
+      if (!$active.length || !$container.length) return;
+
+      // center the active item in the sidebar
+      const containerTop = $container.scrollTop();
+      const containerHeight = $container.innerHeight();
+      const itemTop = $active.position().top + containerTop; // relative to container
+      const itemHeight = $active.outerHeight(true);
+      const targetScrollTop = itemTop - (containerHeight / 2) + (itemHeight / 2);
+
+      $container.stop(true).animate({ scrollTop: targetScrollTop }, 250);
+    }
+
+
+    // === Handle Answers ===
+    $(".answer-btn").on("click", function () {
+      if (!questionOrder.length) return;
+      const q = questionOrder[currentQuestionIndex];
+      const iri = `/api/questions/${q.id}`;
+      const answer = $(this).data("answer");
+      answers[iri] = answer;
+      highlightSelectedAnswer(iri);
+      if (currentQuestionIndex < questionOrder.length - 1) showQuestion(currentQuestionIndex + 1);
+      else {
+        $("#question-page").addClass("blurred");
+        $("#finished-overlay").addClass("active");
+      }
+    });
+
+    // === Submit Answers ===
+    $("#check-results-btn").on("click", function () {
+      $(this).prop("disabled", true).text("Checking results...");
+      const id = "pathly_" + Math.random().toString(36).slice(2, 10);
+      const payload = {
+        answers,
+        createdAt: Date.now(),
+        expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+      };
+      sessionStorage.setItem(id, JSON.stringify(payload));
+      $("#finished-overlay").fadeOut(300);
+      $("#question-page").removeClass("blurred");
+      setTimeout(() => {
+        window.location.href = `../results/index.html?token=${id}`;
+      }, 300);
+    });
+
+    $(document).ready(loadQuestions);
+  </script>
+</body>
+
+</html>

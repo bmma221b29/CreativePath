@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Career Guidance System - Result</title>
+  <link rel="stylesheet" href="ResultStyle.css" />
+  <link rel="icon" type="png" href="../assets/images/logo1.png">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+</head>
+
+<body>
+  <!-- Header -->
+  <header class="navbar">
+    <div class="nav-left">
+      <a href="../">
+        <img src="../assets/images/logo1.png" alt="Logo" class="logo">
+      </a>
+    </div>
+    <nav class="nav-right">
+      <a href="../test/">Test</a>
+      <a href="../about-us/">About</a>
+      <a href="../careers/">Careers</a>
+    </nav>
+  </header>
+
+  <section class="results-section">
+    <h2>Result</h2>
+    <div id="result-container">
+      <p>Loading your personalized results...</p>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>Your Creative Path, Made Clear.</p>
+    <a href="../feedback/" class="footer-link">Feedback</a>
+  </footer>
+
+  <script>
+    const API_BASE = "https://api.whatsmymmcareer.com/api";
+    const ASSESSMENT_ENDPOINT = `${API_BASE}/assessments`;
+
+    // ==============================
+    // MAP CAREERS → YOUTUBE VIDEOS
+    // ==============================
+    const careerVideos = {
+      "Digital Artist": "https://www.youtube.com/embed/wkxL0Dl8aas",
+      "Graphic Designer": "https://www.youtube.com/embed/6rL9Le0WKl8",
+      "Motion Designer": "https://www.youtube.com/embed/d5_2qgs37Cw",
+      "2D animator": "https://www.youtube.com/embed/-jyQvyHZb4Y",
+      "3D Animator": "https://www.youtube.com/embed/rnpsqj4cww4",
+      "Director": "https://www.youtube.com/embed/ZZLrnFuPKII",
+      "Sound Designer": "https://www.youtube.com/embed/ZYG51Wcz4eQ",
+      "Post-Prod Professional": "https://www.youtube.com/embed/qUA_ss0VLYw",
+      "UI/UX Designer": "https://www.youtube.com/embed/ULHrEC-1gNc",
+      "Game Developer": "https://www.youtube.com/embed/nt40voWlkEs",
+      "Game Designer": "https://www.youtube.com/embed/9GawOnZ3AuI",
+    };
+
+    // ==============================
+    // Retrieve answers from sessionStorage (1-day expiry)
+    // ==============================
+    function getAnswersFromSession() {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("token");
+      if (!token) return null;
+
+      try {
+        const raw = sessionStorage.getItem(token);
+        if (!raw) return null;
+
+        const payload = JSON.parse(raw);
+        const now = Date.now();
+
+        // 1 day = 24 hours = 86,400,000 ms
+        const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+        const expiresAt = payload.expiresAt ?? (payload.createdAt + ONE_DAY_MS);
+
+        if (now > expiresAt) {
+          sessionStorage.removeItem(token);
+          console.warn("Session expired — data deleted.");
+          $("#result-container").html("<h3>Session expired. Please retake the test.</h3>");
+          return null;
+        }
+
+        return payload.answers;
+      } catch (e) {
+        console.error("Failed to read session data:", e);
+        return null;
+      }
+    }
+
+    // ==============================
+    // Send POST request
+    // ==============================
+    async function fetchResults(answers) {
+      try {
+        const res = await fetch(ASSESSMENT_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(answers)
+        });
+        if (!res.ok) throw new Error("Submission failed");
+        return await res.json();
+      } catch (err) {
+        console.error("Error fetching results:", err);
+        $("#result-container").html("<h3>Unable to load results. Please try again.</h3>");
+        return null;
+      }
+    }
+
+    // ==============================
+    // Render results
+    // ==============================
+    function renderResults(result) {
+      const $container = $("#result-container");
+      $container.empty();
+
+      if (!result || !result.top?.length) {
+        $container.html("<h3>No result available. Please retake the test.</h3>");
+        return;
+      }
+
+      const top = result.top.slice(0, 3);
+      const colors = ["#223C3B", "#D1F986", "#131313"];
+
+      $.each(top, function (i, career) {
+        const darkText = i === 1;
+        $container.append(`
+        <div class="result-bar">
+          <div class="bar" style="--percent:${career.percentage}%; background-color:${colors[i]}">
+            <span class="career-name ${darkText ? 'dark-text' : ''}">${career.name}</span>
+            <span class="percentage ${darkText ? 'dark-text' : ''}">${career.percentage}%</span>
+          </div>
+        </div>
+      `);
+      });
+
+      const mainCareer = top[0];
+      const videoUrl = careerVideos[mainCareer.name] || careerVideos["Default"];
+
+      $container.append(`
+      <div class="result-description">
+        <h3>Advice from a creative like you — ${mainCareer.name}</h3>
+        <div class="description-box">
+          <iframe 
+            src="${videoUrl}"
+            title="YouTube video player"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen></iframe>
+        </div>
+      </div>
+      <a class="restart-btn" href="../test/">Start again <span class="arrow">›</span></a>
+    `);
+    }
+
+    $(async function () {
+      const answers = getAnswersFromSession();
+      if (!answers) {
+        $("#result-container").html("<h3>Invalid or missing session data.</h3>");
+        return;
+      }
+
+      $("#result-container").html("<p>Evaluating your answers...</p>");
+      const result = await fetchResults(answers);
+      renderResults(result);
+    });
+  </script>
+
+
+</body>
+
+</html>

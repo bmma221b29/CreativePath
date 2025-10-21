@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Career Guidance System</title>
+  <link rel="stylesheet" href="IndexStyle.css" />
+  <link rel="icon" type="png" href="assets/images/logo1.png">
+</head>
+
+<body>
+
+
+
+  <!-- Header -->
+  <header class="navbar">
+    <div class="nav-left">
+      <!-- Replace with your logo file -->
+      <a href="#">
+        <img src="assets/images/logo1.png" alt="Logo" class="logo">
+      </a>
+    </div>
+    <nav class="nav-right">
+      <a href="../test/">Test</a>
+      <a href="../about-us/">About</a>
+      <a href="../careers/">Careers</a>
+    </nav>
+  </header>
+
+  <!-- Main Section -->
+  <section class="hero-section">
+    <!-- Left Content -->
+    <div class="hero-content">
+      <h1>Career Guidance System<br>for Multimedia Careers</h1>
+      <p>
+        Find out which Multimedia Arts field matches your strengths and interests
+        by answering questions about your skills and preferences.
+      </p>
+      <p>
+        Complete all questions to receive your personalized career pathway results.
+      </p>
+      <button class="start-btn" onclick="window.location.href='test/'">
+        <span>Start</span>
+        <div class="icon">
+          <span class="arrow">❯</span>
+        </div>
+      </button>
+    </div>
+
+    <!-- Right Image Section -->
+    <div class="hero-image">
+      <img id="slideshow" src="assets/images/Slideshow1.jpg" alt="Creative workspace">
+    </div>
+  </section>
+
+  <script>
+    // --- Image Slideshow Function ---
+    const images = ["assets/images/Slideshow1.jpg", "assets/images/Slideshow2.jpg", "assets/images/Slideshow3.jpg", "assets/images/Slideshow4.jpg"]; // add your image filenames here
+    let index = 0;
+    const slide = document.getElementById("slideshow");
+
+    setInterval(() => {
+      index = (index + 1) % images.length;
+      slide.src = images[index];
+    }, 5000); // changes every 5 seconds
+  </script>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>Your Creative Path, Made Clear.</p>
+    <a href="feedback/" class="footer-link">Feedback</a>
+  </footer>
+
+</body>
+
+</html>
