@@ -60,6 +60,9 @@
 }
 
 .bar {
+  margin-left: clamp(20px, 3vw, 40px);
+  margin-right: clamp(20px, 3vw, 40px);
+	
   width: var(--percent);
   height: 100%;
   border-radius: 25px;
@@ -223,3 +226,4 @@ body {
 
 
 	
+
