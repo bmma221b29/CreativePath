@@ -58,8 +58,6 @@
   overflow: hidden;
   height: 70px;
   position: relative;
-  margin-left: clamp(20px, 3vw, 40px);
-  margin-right: clamp(20px, 3vw, 40px);
 }
 
 .bar {
@@ -123,7 +121,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-    margin-bottom: 100px
+  margin-bottom: 100px
 }
 
 .description-box iframe {
@@ -226,6 +224,7 @@ body {
 
 
 	
+
 
 
 
