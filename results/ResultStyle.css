@@ -41,16 +41,14 @@
   font-family: "Gotham", sans-serif;
   color: #1e3d3b;
   position: relative;
-	  margin-left: clamp(20px, 3vw, 40px);
-  margin-right: clamp(20px, 3vw, 40px);
+
 }
 
 .results-section h2 {
   font-weight: 700;
   font-size: 48px;
   margin-bottom: 20px;
-  margin-left: clamp(20px, 3vw, 40px);
-  margin-right: clamp(20px, 3vw, 40px);
+
 }
 
 .result-bar {
@@ -228,6 +226,7 @@ body {
 
 
 	
+
 
 
 
